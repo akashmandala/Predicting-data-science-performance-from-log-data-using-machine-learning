@@ -1,0 +1,123 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load dataset
+df = pd.read_csv("StudentsPerformance.csv")
+
+# Encode categorical variables
+le = LabelEncoder()
+df['gender'] = le.fit_transform(df['gender'])
+df['race/ethnicity'] = le.fit_transform(df['race/ethnicity'])
+df['parental level of education'] = le.fit_transform(df['parental level of education'])
+df['lunch'] = le.fit_transform(df['lunch'])
+df['test preparation course'] = le.fit_transform(df['test preparation course'])
+
+# Create target variable: Pass if avg >= 60
+df['average_score'] = df[['math score', 'reading score', 'writing score']].mean(axis=1)
+df['pass'] = (df['average_score'] >= 60).astype(int)
+
+# Features and target
+X = df.drop(columns=['math score', 'reading score', 'writing score', 'average_score', 'pass'])
+y = df['pass']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train XGBoost
+model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+model.fit(X_train, y_train)
+
+# Predict and evaluate
+y_pred = model.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+# Visualization
+sns.countplot(x='pass', data=df)
+plt.title('Pass/Fail Distribution')
+plt.show()
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+
+# Assuming you already have your model trained as 'model' and test data as X_test, y_test
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+# Plotting the accuracy
+plt.figure(figsize=(6, 4))
+plt.barh(['Model Accuracy'], [accuracy], color='green')
+plt.xlabel('Accuracy')
+plt.title('Model Accuracy')
+plt.show()
+
+import xgboost as xgb
+
+# Feature importance (from the XGBoost model)
+feature_importances = model.feature_importances_
+
+# Plotting the feature importance
+plt.figure(figsize=(8, 6))
+plt.barh(X.columns, feature_importances, color='teal')
+plt.xlabel('Feature Importance')
+plt.title('Feature Importance (XGBoost Model)')
+plt.show()
+
+# Before Preprocessing
+plt.figure(figsize=(6, 4))
+sns.countplot(x='pass', data=df)
+plt.title('Pass/Fail Distribution Before Preprocessing')
+plt.show()
+
+# After Preprocessing (for example, visualizing the balance after creating features)
+plt.figure(figsize=(6, 4))
+sns.countplot(x='pass', data=df)  # Or any processed dataset column
+plt.title('Pass/Fail Distribution After Preprocessing')
+plt.show()
+
+import seaborn as sns
+
+# Create a pairplot
+sns.pairplot(df[['math score', 'reading score', 'writing score', 'pass']])
+plt.title('Pairplot: Exploratory Data Analysis')
+plt.show()
+
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_curve, auc
+
+# Step 1: Generate synthetic binary classification data
+X, y = make_classification(n_samples=1000, n_classes=2, random_state=42, n_features=20)
+
+# Step 2: Split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Step 3: Train a classifier
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# Step 4: Get predicted probabilities
+y_probs = model.predict_proba(X_test)[:, 1]  # Probabilities for the positive class
+
+# Step 5: Compute ROC curve and AUC score
+fpr, tpr, thresholds = roc_curve(y_test, y_probs)
+roc_auc = auc(fpr, tpr)
+
+# Step 6: Plot the ROC curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='blue', label=f'ROC Curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')  # Diagonal line
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend()
+plt.grid(True)
+plt.show()
